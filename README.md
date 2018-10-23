@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Boardgame-Recommender\
 Author: Austin Chou\
 Update: 2018-10-21\
@@ -98,6 +97,9 @@ Settings passed to the webscraper to generate the appropriate csvs.\
 
 # Additional Notes
 1) Vectorized bgg data.csv is not provided. The csv contains every user collection split into training vectors for each game in the collection (includes the input (all other games in the collection) and output (the game itself)). File is too large to upload.
+<<<<<<< HEAD
 =======
 # Boardgame-Recommender-Project
 >>>>>>> 405629261ac0befebe31d69e75a637bd1b2edb9c
+=======
+>>>>>>> dd2bcfbb584cfacc2cf593205229cab24f2c9bfd
