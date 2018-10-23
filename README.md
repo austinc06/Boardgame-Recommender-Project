@@ -3,9 +3,9 @@ Author: Austin Chou\
 Update: 2018-10-21
 
 # Table of Contents
-1) [Purpose](#purpose)\
-2) [Topic of Interest](#topic-of-interest)\
-3) [Project Outline](#project-outline)\
+1) [Purpose](#purpose)
+2) [Topic of Interest](#topic-of-interest)
+3) [Project Outline](#project-outline)
 4) [Code Documentation](#code-documentation)
 5) [Additional Notes](#additional-notes)
 
@@ -39,47 +39,47 @@ try implementing a neural network approach. Still needs to be cleaned and organi
 ## Scripts
 ### functions-bgg_get.py
 Contains the following functions:\
-get_bgg_mechanics: Scrape the mechanisms used by boardgamegeek and produce a csv containing the list.\
+**get_bgg_mechanics**: Scrape the mechanisms used by boardgamegeek and produce a csv containing the list.\
   -Input: None\
   -Output: List of Mechanisms (written csv)
 
-get_bgg_categories: Scrape the categories used by boardgamegeek and produce a csv containing the list.\
+**get_bgg_categories**: Scrape the categories used by boardgamegeek and produce a csv containing the list.\
   -Input: None\
   -Output: List of Categories (written csv)
 
-get_game_attributes: Given a game name, id, and rank from bgg, create and return a dataframe storing the game's attributes: Name, Rank, ID, #Players, Playtime, Weight, Categories, Mechanisms, and the total number of categories and mechanisms.\
+**get_game_attributes**: Given a game name, id, and rank from bgg, create and return a dataframe storing the game's attributes: Name, Rank, ID, #Players, Playtime, Weight, Categories, Mechanisms, and the total number of categories and mechanisms.\
   -Input: Game name (str), Game id (str or int), Game rank (str or int), List of categories (list of strings), List of mechanisms (list of strings)\
   -Output: A dataframe containing a single row
 
-scale_dataframe: Given a bgg attributes dataframe, remove the label columns (name, rank, id) and scale the non-binary columns (#players, playtime, weight)\
+**scale_dataframe**: Given a bgg attributes dataframe, remove the label columns (name, rank, id) and scale the non-binary columns (#players, playtime, weight)\
   -Input: Game attributes dataframe (df)\
   -Output: Scaled game attributes dataframe (df)
 
-game_tsne: Take a scaled game attribute dataframe and run the tsne function to generate tsne coordinates. Print the plot and return a dataframe of coordinates for each game.\
+**game_tsne**: Take a scaled game attribute dataframe and run the tsne function to generate tsne coordinates. Print the plot and return a dataframe of coordinates for each game.\
   -Input: Scaled game attribute dataframe (df), Perplexity value for tsne (int), Steps value for tsne (int)\
   -Output: TSNE coordinate dataframe (df)
 
-RatingThreshold: Filter a collection based on a rating threshold (user or bgg score) of 7.\
+**RatingThreshold**: Filter a collection based on a rating threshold (user or bgg score) of 7.\
   -Input: Dataframe of games representing a collection (df)\
   -Output: Curated dataframe of games (df)
 
-collection_distance: Calculate the average distance (dissimilarity) score of the user's collection given a set of tsne coordinates for each game.\
+**collection_distance**: Calculate the average distance (dissimilarity) score of the user's collection given a set of tsne coordinates for each game.\
   -Input: List of games (list), Dataframe of dimensions for each game (df)\
   -Output: Mean distance of games in the list (dbl)
 
-collection_euc_distance: Calculate the average distance score of the user's collection given a set of coordinates using euclidean distance.\
+**collection_euc_distance**: Calculate the average distance score of the user's collection given a set of coordinates using euclidean distance.\
   -Input: List of games (list), Dataframe of dimensions for each game (df)\
   -Output: Mean distance of games in the list (dbl)
 
-calc_distance: Take a set of target coordinates and a matrix containing all sets of coordinates. Calculate the distance the target from all other points in space.\
+**calc_distance**: Take a set of target coordinates and a matrix containing all sets of coordinates. Calculate the distance the target from all other points in space.\
   -Input: Target coordinate (dataframe row), Array of all other coordinates (df)\
   -Output: Array of calculated distances (df)
 
-find_closest_game: Take the target game name, the dataframe of coordinates, and a number of games to return. Game coordinates can be euclidean or tsne or any other set of coordinates. First column must be game name.\
+**find_closest_game**: Take the target game name, the dataframe of coordinates, and a number of games to return. Game coordinates can be euclidean or tsne or any other set of coordinates. First column must be game name.\
   -Input: Game name (str), Dataframe of coordinates (df), Number of games to return (int)\
   -Output: Dataframe with CLOSEST boardgame names and calculated distances
 
-find_furthest_game: Take the target game name, the dataframe of coordinates, adn a number of games to return. Game coordinates can be euclidean or tsne or any other set of coordinates. First column must be game name.\
+**find_furthest_game**: Take the target game name, the dataframe of coordinates, adn a number of games to return. Game coordinates can be euclidean or tsne or any other set of coordinates. First column must be game name.\
   -Input: Game name (str), Dataframe of coordinates (df), Number of games to return (int)\
   -Output: Dataframe with FURTHEST boardgame names and calculated distances
 
