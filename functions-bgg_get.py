@@ -374,23 +374,24 @@ def game_tsne(original_ga, scaled_ga, perp=100, steps=2000):
     return df
 
 # Threshold a collection based on game ratings ---------------------------------
-def RatingThreshold(collection):
+def RatingThreshold(collection, printout = False):
     '''Filter a collection based on a rating threshold (user or bgg) of 7
 
     Input: Dataframe of games representing a collection
     Output: Curated dataframe of games
     '''
     import pandas as pd
-
-    print('Collection Size start: ' + str(collection.shape[0]))
+    if printout:
+        print('Collection Size start: ' + str(collection.shape[0]))
     # First remove any games that have no User Rating and no BGG rating
     #Grab indices of N/A User and BGG rating rows
     na_idx = collection[(collection['User rating'].isnull()) &
                         (collection['BGG rating'].isnull())].index.tolist()
     collection.drop(collection.index[na_idx], inplace=True)
 
-    print('Collection Size after removing N/A ratings: ' +
-            str(collection.shape[0]))
+    if printout:
+        print('Collection Size after removing N/A ratings: ' +
+                str(collection.shape[0]))
 
     # Remove any games with User rating < 7
     #Ratings are stored as strings to account for N/A rating
@@ -402,8 +403,9 @@ def RatingThreshold(collection):
                             (pd.to_numeric(collection['User rating'],
                             errors='coerce') >= 7)]
 
-    print('Collection Size after removing low User ratings: ' +
-            str(collection.shape[0]))
+    if printout:
+        print('Collection Size after removing low User ratings: ' +
+                str(collection.shape[0]))
 
     #Reset index
     collection.reset_index(drop=True, inplace=True)
@@ -417,8 +419,9 @@ def RatingThreshold(collection):
                                                 errors='coerce') < 7)].index.tolist()
     collection.drop(collection.index[low_bgg_idx],inplace=True)
     collection.reset_index(drop=True, inplace=True)
-    print('Collection Size after removing low BGG ratings (if no User rating available): ' +
-            str(collection.shape[0]))
+    if printout:
+        print('Collection Size after removing low BGG ratings (if no User rating available): ' +
+                str(collection.shape[0]))
     return collection
 
 # Find mean TSNE Similarity of a game collection -------------------------------
