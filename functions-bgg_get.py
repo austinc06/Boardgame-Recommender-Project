@@ -344,7 +344,7 @@ def scale_dataframe(ga):
     return scaled_ga
 
 # Run TSNE, plot, and output TSNE coordinates ----------------------------------
-def game_tsne(original_ga, scaled_ga, perp=100, steps=2000):
+def game_tsne(original_ga, scaled_ga, perp=100, steps=2000, printout=False):
     '''Take a scaled game attribute dataframe and run the tsne function to find
     the mapped coordinates. Print a plot and return the coordinates.
 
@@ -363,7 +363,8 @@ def game_tsne(original_ga, scaled_ga, perp=100, steps=2000):
 
     # See the t-sne plot and save it
     out = str(perp) + ' Perplexity, ' + str(steps) + ' Steps'
-    ts= df.plot(x='Ax1',y='Ax2',kind='scatter',title=out)
+    if printout:
+        ts= df.plot(x='Ax1',y='Ax2',kind='scatter',title=out)
 
     out = 'game_tsne '+out+'.png'
     #ts.get_figure().savefig(out)
@@ -374,7 +375,7 @@ def game_tsne(original_ga, scaled_ga, perp=100, steps=2000):
     return df
 
 # Threshold a collection based on game ratings ---------------------------------
-def RatingThreshold(collection, printout = False):
+def RatingThreshold(collection, printout=False):
     '''Filter a collection based on a rating threshold (user or bgg) of 7
 
     Input: Dataframe of games representing a collection
