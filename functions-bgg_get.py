@@ -571,3 +571,218 @@ def find_furthest_game(game, game_coordinates, k=5):
 
     #Sort output by calculated distance
     return found.sort_values(by=['Dissimilarity/Distance'], ascending=False).reset_index(drop=True)
+
+# Get User Collection ----------------------------------------------------------
+def UserCollection(user):
+    '''Take a user name (string) and pull their collection off boardgamegeekself.
+
+    Input: Username (string)
+    Ouptut: Dataframe with user's boardgame collection
+    '''
+    # Import necessary libraries
+    from bs4 import BeautifulSoup
+    import requests
+    import pandas as pd
+
+    # Set up pd dataframe
+    col = ['User','Game','User rating', 'BGG rating']
+    games = pd.DataFrame(columns = col)
+
+    # Pull webpage
+    url = "https://boardgamegeek.com/collection/user/" + user + "?own=1&subtype=boardgame&ff=1"
+    r = requests.get(url)
+
+    data = r.text
+
+    soup = BeautifulSoup(data, "lxml")
+
+    # Get all the "Objects" that contain each boardgame in the collection.
+    #Use the fact that the boardgame collection is the only one with the attribute "id".
+    #All other tables on the page have no additional attributes
+    all_games = soup.find_all(lambda tag:tag.name=='tr' and len(tag.attrs) > 0)
+
+    for i in range(0,len(all_games)):
+        # Start with 1 boardgame "Object"
+        current_game = all_games[i]
+
+        # To return Game name:
+        #t is a bs4 tag
+        #collection rating is stored under td tag, class = collection_objectname , a
+        t_name = current_game.find_all('td', {'class':'collection_objectname '})[0]
+        name = t_name.a.contents[0]
+
+
+        # To return (user) Collection Rating:
+        #t is a bs4 tag
+        #collection rating is stored under td tag, class = collection_rating , div class=ratingtext
+        t_UserRating = current_game.find_all('td',{'class':'collection_rating '})[0]
+        t_UserRating = t_UserRating.find_all('div',{'class':'ratingtext'})
+
+        # It's possible the user does not provide a rating, so we should check for that
+        if t_UserRating:
+            t_UserRating = t_UserRating[0]
+            UserRating = t_UserRating.contents[0]
+        else:
+            UserRating = 'N/A'
+
+
+        # To return BGG Rating:
+        #t is a bs4 tag
+        #collection rating is stored under td tag, class = collection_bggrating
+        t_BggRating = current_game.find_all('td',{'class':'collection_bggrating'})
+
+        #Can't call the td attribute for some reason. Use 'text' to pull the text string
+        rate_text = t_BggRating[0].text
+
+        #The text string includes \n and \t spacing. Get just the rating number (a float)
+        #Find first index of a numerical digit
+        #This can be done using the regular expression library 're'
+        import re
+        start = re.search("\d",rate_text) #\d re flag for any decimal digit [0-9]
+
+        # It's possible bgg does not provide a rating, so we should check
+        if start is None:
+            #Start is currently set as a NoneType if regex does not find a numerical character
+            start = rate_text.find('N') #Use standard str.find to locate index for "N/A"
+        else:
+            #Regex does return an output
+            start = re.search("\d",rate_text).start()
+
+        #Find the end of the rating string
+        end = rate_text.find('\t',start)
+
+        #Get the decimal rating
+        BggRating = rate_text[start:end]
+
+
+        # Final Result
+        print('User: ' + user)
+        print('Game name: ' + name)
+        print('User rating: ' + UserRating)
+        print('BGG rating: ' + BggRating)
+        print('\n')
+
+        games = games.append(pd.DataFrame([[user,name, UserRating, BggRating]], columns=col))
+
+    # Reset the index of the pd dataframe since the rows get appended all with index=0
+    games.reset_index(drop=True, inplace=True)
+
+    # Export collection as a csv for later
+    games.to_csv(user+'_raw.csv',sep='\t')
+
+    return games
+
+# Games to Vector --------------------------------------------------------------
+def games2vec(user_collection, games_dict):
+    '''Take the user collection (game titles series) and game title dictionary
+        as input. Output a one-hot vector representation of the collection. All
+        mismatched game titles will be ignored.
+
+    Input: Dataframe containing user's collection (df),
+      Games dictionary (df)
+    Output: Vector representation fo the collection
+    '''
+
+    # Use numpy to generate the vector
+    import numpy as np
+
+    # Set up unpopulated vector of 0's
+    collection = np.zeros((1,len(games_dict)))
+
+    for i in range(0,len(user_collection)):
+        current_game = user_collection.iloc[i]
+
+        if current_game in games_dict:
+            current_idx = games_dict[current_game]
+            collection[0, current_idx] = 1
+
+    return collection
+
+# Create boardgame dictionary --------------------------------------------------
+def bgg_dict(min_rank=-1):
+    '''Create dictionary of all ranked games on BGG to a number; the number is
+    the index for the game used in the data sets. Also returns a reverse
+    dictionary of number to game for decoding.
+    Input: Minimum rank to put in the dicionary (higher rank = lower number; lower
+      rank = higher number)
+     Returns: Games dictionary, Games_reverse dictionary
+    '''
+
+    import pandas as pd
+    # Create dictionary of all games. From previous webscraping, we have a csv with all ranked games on BGG. We'll limit our recommendations to games on the list.
+    games_list = pd.read_csv('bgg_id_output.csv')
+
+    # Remove all NaN rows
+    games_list.dropna(axis=0,how='any',inplace=True)
+    games_list.reset_index(drop=True,inplace=True)
+
+    # There are repeat titles in the list. Remove them.
+    rep_games_idx = games_list[games_list['Game'].duplicated()].index.tolist() #Returns the indices of all repeat titles. This list does NOT include the first appearance
+    games_list.drop(games_list.index[rep_games_idx],inplace=True)
+    games_list.reset_index(drop=True,inplace=True)
+
+    # Get just the titles
+    games = games_list['Game']
+
+    # Create empty dictionary
+    games_idx = dict()
+
+    # Establish minimum game rank to consider; default -1 considers all games
+    if min_rank == -1:
+        min_rank = len(games)
+    elif min_rank >= len(games):
+        min_rank = len(games)
+    else:
+        min_rank = min_rank+1
+
+    # The dictionary games_idx will use Game Titles as the key and a number as the value
+    for i in range(0,min_rank):
+        game_title = games[i]
+        games_idx[game_title] = i
+
+
+    games_reverse = dict((y,x) for x,y in games_idx.items())
+
+    return games_idx, games_reverse
+
+# Create training set ----------------------------------------------------------
+def generate_training(collection, games_dict):
+    """Takes a user's collection as input along with the games dictionary.
+    Outputs a matrix where each row is the training vector (predictor) for a game
+    and another matrix where each row is the expected vector (predicted)
+    Input: User collection (df), games dictionary to set length of each row (df)
+    Output: Two matrices: one predictor and one predicted matrix
+    """
+
+    import numpy as np
+
+    # Find all indices in the collection array with value=1
+    in_collection = np.nonzero(collection)[0] #returns index of nonzeros (aka value=1) of collection array
+
+    # Create predictor vectors and predicted vectors
+    #Iterate through every game in the collection, indices given by in_collection
+    #Set value at the current index to 0 for predictor vector
+    #Set a predicted vector to have 1 at the current index
+
+    # Create two empty np arrays. #Rows = #Games in collection. #Columns = #Game Titles
+    predictor = np.empty([len(in_collection), len(games_dict)])
+    predicted = np.zeros([len(in_collection), len(games_dict)])
+
+    for i in range(0,len(in_collection)):
+        # Index of current game
+        current_game = in_collection[i]
+
+    #     # Create copy of the collection
+    #     curr_predictor = np.copy(collection)
+    #    # Set current boardgame value to 0 in predictor
+    #    curr_predictor[0,current_game] = 0
+
+        # Set values in current predictor row to collection
+        predictor[i,:] = collection
+        # Set current boardgame value to 0 in predictor
+        predictor[i,current_game] = 0
+
+        # Set current boardgame in predicted vector to 1
+        predicted[i,current_game] = 1
+
+    return predictor, predicted
